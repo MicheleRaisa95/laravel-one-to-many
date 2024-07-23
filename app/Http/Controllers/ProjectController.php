@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\Type;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -15,7 +16,8 @@ class ProjectController extends Controller
 
     public function create()
     {
-        return view('projects.create');
+        $types = Type::all();
+        return view('projects.create', compact('types'));
     }
 
     public function store(Request $request)
@@ -23,19 +25,12 @@ class ProjectController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|max:2048'
+            'type_id' => 'nullable|exists:types,id',
         ]);
 
-        $project = new Project($request->all());
+        Project::create($request->all());
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images');
-            $project->image = $path;
-        }
-
-        $project->save();
-
-        return redirect()->route('projects.index');
+        return redirect()->route('projects.index')->with('success', 'Progetto creato con successo');
     }
 
     public function show(Project $project)
@@ -45,7 +40,8 @@ class ProjectController extends Controller
 
     public function edit(Project $project)
     {
-        return view('projects.edit', compact('project'));
+        $types = Type::all();
+        return view('projects.edit', compact('project', 'types'));
     }
 
     public function update(Request $request, Project $project)
@@ -53,24 +49,17 @@ class ProjectController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'image' => 'nullable|image|max:2048'
+            'type_id' => 'nullable|exists:types,id',
         ]);
 
-        $project->fill($request->all());
+        $project->update($request->all());
 
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('images');
-            $project->image = $path;
-        }
-
-        $project->save();
-
-        return redirect()->route('projects.index');
+        return redirect()->route('projects.index')->with('success', 'Progetto aggiornato con successo');
     }
 
     public function destroy(Project $project)
     {
         $project->delete();
-        return redirect()->route('projects.index');
+        return redirect()->route('projects.index')->with('success', 'Progetto eliminato con successo');
     }
 }
